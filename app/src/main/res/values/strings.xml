@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Telebug</string>
+    <string name="xposeddescription">Spoofs as official Telegram client</string>
+</resources>
