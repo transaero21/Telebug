@@ -15,6 +15,7 @@ public class TelebugHook implements IXposedHookLoadPackage {
 
     private static final int CONSTRUCTOR_SEND_CODE = 0xa677244f;
     private static final int CONSTRUCTOR_PASSKEY_LOGIN = 0x518ad0b7;
+    private static final int CONSTRUCTOR_EXPORT_LOGIN_TOKEN = 0xb7e085fe;
 
     private static final int TARGET_API_ID = 4;
     private static final String TARGET_API_HASH = "014b35b6184100b085b0d0572f9b5103";
@@ -57,9 +58,17 @@ public class TelebugHook implements IXposedHookLoadPackage {
                             return;
                         }
 
+                        if (value == CONSTRUCTOR_EXPORT_LOGIN_TOKEN) {
+                            Log.d(TAG, "exportLoginToken detected, tracking buffer @" + bufferHash);
+                            trackedBuffers.put(buffer, AWAIT_API_ID);
+                            return;
+                        }
+
                         if (!trackedBuffers.isEmpty()) {
                             Integer state = trackedBuffers.get(buffer);
-                            if (state != null && state == AWAIT_API_ID) {
+                            if (state == null) return;
+
+                            if (state == AWAIT_API_ID) {
                                 Log.i(TAG, "Replacing api_id: " + value + " -> " + TARGET_API_ID + " on buffer @" + bufferHash);
                                 param.args[0] = TARGET_API_ID;
                                 trackedBuffers.put(buffer, AWAIT_API_HASH);
