@@ -79,7 +79,12 @@ public class TelebugHook implements IXposedHookLoadPackage {
                     }
                 }
             });
+            Log.i(TAG, "writeInt32 hook installed for " + lpparam.packageName);
+        } catch (Throwable t) {
+            Log.e(TAG, "Failed to hook writeInt32", t);
+        }
 
+        try {
             XposedHelpers.findAndHookMethod(nbbClass, "writeString", String.class, new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) {
@@ -106,10 +111,9 @@ public class TelebugHook implements IXposedHookLoadPackage {
                     }
                 }
             });
-
-            Log.i(TAG, "Hooks installed successfully for " + lpparam.packageName);
+            Log.i(TAG, "writeString hook installed for " + lpparam.packageName);
         } catch (Throwable t) {
-            Log.e(TAG, "Failed to install hooks for " + lpparam.packageName, t);
+            Log.e(TAG, "Failed to hook writeString", t);
         }
     }
 }
