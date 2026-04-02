@@ -19,6 +19,9 @@ public class TelebugHook implements IXposedHookLoadPackage {
 
     private static final int TARGET_API_ID = 4;
     private static final String TARGET_API_HASH = "014b35b6184100b085b0d0572f9b5103";
+    private static final String TARGET_REG_ID = "c4RO3vYgTgmnG2HtR0WZoK:APA91bGJ-niZl7i2aYwEh2Vg3ZMdRig1_GwZhMKEcPmQQ2GIc6wf-1KCUYxt7EzwzZBcV3o44G2QzMxuTHB5wM6WeWFsDYkE0uEPCFdMCXeF5iOv4_iTuE4";
+    private static final String TARGET_FINGERPRINT = "49C1522548EBACD46CE322B6FD47F6092BB745D0F88082145CAF35E14DCC38E1";
+    private static final String TARGET_PACKAGE_ID = "org.telegram.messenger.web";
 
     private static final int SENDCODE_SKIP_PHONE = 1;
     private static final int AWAIT_API_ID = 2;
@@ -28,14 +31,39 @@ public class TelebugHook implements IXposedHookLoadPackage {
 
     @Override
     public void handleLoadPackage(XC_LoadPackage.LoadPackageParam lpparam) {
-        Class<?> nbbClass;
+        Class<?> nbbClass, cmClass;
         try {
             nbbClass = XposedHelpers.findClass("org.telegram.tgnet.NativeByteBuffer", lpparam.classLoader);
+            cmClass = XposedHelpers.findClass("org.telegram.tgnet.ConnectionsManager", lpparam.classLoader);
         } catch (XposedHelpers.ClassNotFoundError e) {
             return;
         }
 
         Log.d(TAG, "Hooking into " + lpparam.packageName);
+
+        try {
+            XposedHelpers.findAndHookMethod(cmClass, "native_init",
+                    int.class, int.class, int.class, int.class,
+                    String.class, String.class, String.class, String.class, String.class,
+                    String.class, String.class, String.class, String.class, String.class, String.class,
+                    int.class, long.class, boolean.class, boolean.class, boolean.class, int.class, int.class,
+                    new XC_MethodHook() {
+                        @Override
+                        protected void beforeHookedMethod(MethodHookParam param) {
+                            try {
+                                Log.i(TAG, "native_init: replacing apiId, regId, fingerprint, packageId");
+                                param.args[3] = TARGET_API_ID;
+                                param.args[11] = TARGET_REG_ID;
+                                param.args[12] = TARGET_FINGERPRINT;
+                                param.args[14] = TARGET_PACKAGE_ID;
+                            } catch (Throwable t) {
+                                Log.e(TAG, "Error in native_init hook", t);
+                            }
+                        }
+                    });
+        } catch (Throwable t) {
+            Log.e(TAG, "Failed to hook native_init", t);
+        }
 
         try {
             XposedHelpers.findAndHookMethod(nbbClass, "writeInt32", int.class, new XC_MethodHook() {
